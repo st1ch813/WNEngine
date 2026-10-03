@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weazel News Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --card-bg: #13151c;
+            --accent-red: #ff3b30;
+            --accent-blue: #3a86ff;
+            --accent-green: #06d6a0;
+            --border-color: #232634;
+            --text-main: #f8f9fa;
+            --text-muted: #8d99ae;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; padding: 20px; }
+
+        .header {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            padding: 18px 25px; border-radius: 14px; margin-bottom: 20px;
+        }
+        .logo { font-size: 1.2rem; font-weight: 800; color: var(--accent-red); letter-spacing: 1px; }
+
+        .container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+
+        .card {
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 14px; padding: 25px; display: flex; flex-direction: column; gap: 15px;
+        }
+
+        .card-title { font-size: 1.05rem; font-weight: 700; color: var(--text-main); }
+        label { font-size: 0.85rem; font-weight: 600; color: #00b4d8; }
+
+        textarea, select, input {
+            width: 100%; background: #08090c; border: 1px solid var(--border-color);
+            color: var(--text-main); padding: 12px 14px; border-radius: 8px; font-size: 0.95rem; outline: none;
+        }
+        textarea { resize: vertical; min-height: 180px; }
+
+        .btn {
+            background: var(--accent-blue); color: white; border: none; padding: 14px;
+            border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s;
+        }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-green { background: var(--accent-green); color: #08090c; }
+        .btn-secondary { background: #212529; font-size: 0.85rem; padding: 8px 14px; width: fit-content; }
+
+        .footer-info { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-top: auto; }
+        .loading { opacity: 0.5; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo">🔴 WEAZEL NEWS — EDITOR STUDIO</div>
+    </div>
+
+    <div class="container">
+        <!-- Левая панель -->
+        <div class="card">
+            <div class="card-title">⚙️ НАСТРОЙКИ МАТЕРИАЛА</div>
+            
+            <div>
+                <label>Тема и подробности статьи (IC):</label>
+                <textarea id="topic" placeholder="Укажите тему, ключевые факты, имена участников или цитаты..."></textarea>
+            </div>
+
+            <div>
+                <label>Формат материала:</label>
+                <select id="format">
+                    <option>Новости штата</option>
+                    <option>Интервью с госслужащим</option>
+                    <option>Криминальная хроника</option>
+                    <option>Обзор бизнеса / авто</option>
+                    <option>Репортаж с мероприятия</option>
+                </select>
+            </div>
+
+            <button class="btn" id="genBtn" onclick="generateText()">🚀 СГЕНЕРИРОВАТЬ СТАТЬЮ</button>
+        </div>
+
+        <!-- Правая панель -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="card-title">📄 ГОТОВЫЙ ТЕКСТ</div>
+                <button class="btn btn-secondary" onclick="copyText()">📋 Скопировать</button>
+            </div>
+
+            <textarea id="result" placeholder="Здесь появится сгенерированная статья..." readonly></textarea>
+
+            <div>
+                <label>✏️ Промпт для правок / доработки:</label>
+                <input type="text" id="refine" placeholder="Напр.: Сделай официальнее / добавь детали...">
+            </div>
+
+            <button class="btn btn-green" id="refineBtn" onclick="refineText()">🔄 Внести правки в текст</button>
+
+            <div class="footer-info">
+                <span id="charCount">Символов: 0</span>
+                <span>Статус: Готов к работе</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function generateText() {
+            const topic = document.getElementById('topic').value;
+            const format = document.getElementById('format').value;
+            if(!topic) return alert('Введите тему статьи!');
+
+            setLoading(true, '⏳ Генерация текста...');
+            const res = await fetch('/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ topic, format })
+            });
+            const data = await res.json();
+            setLoading(false);
+
+            if(data.success) {
+                document.getElementById('result').value = data.text;
+                updateCount();
+            } else {
+                alert(data.error);
+            }
+        }
+
+        async function refineText() {
+            const current_text = document.getElementById('result').value;
+            const refine = document.getElementById('refine').value;
+            if(!current_text || !refine) return alert('Сначала сгенерируйте текст и укажите правку!');
+
+            setLoading(true, '⏳ Редактирование...');
+            const res = await fetch('/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ current_text, refine })
+            });
+            const data = await res.json();
+            setLoading(false);
+
+            if(data.success) {
+                document.getElementById('result').value = data.text;
+                document.getElementById('refine').value = '';
+                updateCount();
+            } else {
+                alert(data.error);
+            }
+        }
+
+        function setLoading(isLoading, text = '') {
+            const genBtn = document.getElementById('genBtn');
+            const result = document.getElementById('result');
+            if(isLoading) {
+                genBtn.disabled = true;
+                result.value = text;
+            } else {
+                genBtn.disabled = false;
+            }
+        }
+
+        function updateCount() {
+            document.getElementById('charCount').innerText = `Символов: ${document.getElementById('result').value.length}`;
+        }
+
+        function copyText() {
+            const text = document.getElementById('result').value;
+            if(text) {
+                navigator.clipboard.writeText(text);
+                alert('Скопировано в буфер обмена!');
+            }
+        }
+    </script>
+</body>
+</html>
