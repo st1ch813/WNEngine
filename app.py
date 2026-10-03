@@ -5,7 +5,7 @@ import requests
 app = Flask(__name__)
 
 # Твой API-ключ OpenRouter (при деплое на Render лучше добавить его в Environment Variables)
-OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "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")
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "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")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 # Актуальная бесплатная модель без жестких гео-блокировок
