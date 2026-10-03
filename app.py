@@ -9,7 +9,7 @@ OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "sk-or-v1-1bf5cd01b4ac
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 # Актуальная бесплатная модель без жестких гео-блокировок
-MODEL_NAME = "gnvidia/nemotron-3.5-lightning:free"
+MODEL_NAME = "nvidia/nemotron-3.5-lightning:free"
 
 IC_SYSTEM_INSTRUCTION = """
 Ты — профессиональный журналист издания Weazel News в штате Сан-Андреас (GTA RP).
